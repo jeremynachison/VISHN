@@ -1,0 +1,17 @@
+NetworkFile=Barabasi-AlbertLOW.edgelist
+NumInitialInfected=1
+InitInfectedNodes=[5]
+
+InfectionMethod=Individual
+Center=1700000
+Steepness=-3/1700000
+InitialExposure=1e5
+
+Equation=tive
+InfectiveIndex=2
+ParameterData=barabasi_albert_params.csv
+TargetInit=[60000,0,0,0]
+InfectedInit=[60000,1,1/6000,0]
+
+Duration=100
+SamplesPerDay=10
