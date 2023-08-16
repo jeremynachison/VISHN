@@ -1,0 +1,3 @@
+# HostSim
+
+HostSim is a python based disease simulation software designed for cross scale sub-host/host transmission models. By combining the two most common modelling frameworks in epidemiology, network and differential equation models, HostSim models sub-host dynamics through differential equations and between-host dynamics by nesting these equations within the nodes of a network. HostSim simulations are highly flexible and can be configured to explore many topics in epidemiology, like vaccination scheduling and waning immunity, the effects of population heterogeneity, and social distancing protocols.
