@@ -52,6 +52,8 @@ def read_config(config_path):
     configs = dict(zip(config_df.key, config_df.val))
     # If no initial nodes given, set to None for a randomized experiment
     configs.setdefault("InitInfectedNodes", None)
+    # If no seed is given,
+    configs.setdefault("Seed", random.randint(0,9999))
     return configs
 
 def load_Network(configs):
@@ -79,7 +81,7 @@ def inf_prob(x, center, steepness):
     return 1/(1+(np.e)**((steepness)*(x-center)))
 
 def neighborhood(node, 
-                 G, viral_load_ind, infected, center, steepness, init_expo, time, user_fct, paramDf):
+                 G, viral_load_ind, infected, center, steepness, init_expo, time, user_fct, paramDf, seed):
     """ Mechanism for virus transmission via the pooled neighborhood viral load. 
     The probability of a node becoming infected is calculated by the viral load 
     of all neighboring nodes.
@@ -106,14 +108,12 @@ def neighborhood(node,
         probability = trans_rate * inf_prob(virus_tot, center, steepness)
     else: 
         probability = 0
-    if np.random.rand() < probability:
+    if np.random.rand(seed=seed) < probability:
         # node is exposed to constant viral load, regardless of neighborhood vload
         exposure = (init_expo,) 
         inf_update = solve_ivp(user_fct, (time-0.1,time), G.nodes[node]["state"][-1], 
                                t_eval = np.linspace(time-0.1,time,2), args = (node,paramDf,exposure)).y
         G.nodes[node]["state"] = np.vstack((G.nodes[node]["state"],np.transpose(inf_update)[-1]))
-        G.nodes[node]["TimeInfected"] += [time]
-        G.nodes[node]["Exposure"] += [time]
         outcome = 1
     # node remains uninfected, add another uninfected row to diff eq array
     else:
@@ -121,6 +121,7 @@ def neighborhood(node,
                                  t_eval = np.linspace(time-0.1,time,2)).y
         G.nodes[node]["state"] = np.vstack((G.nodes[node]["state"],np.transpose(uninf_update)[-1]))
         outcome = 0
+    G.nodes[node]["Infected"] += [outcome]
     return outcome, probability
 
 
@@ -155,8 +156,6 @@ def individual(node,
             inf_update = solve_ivp(user_fct, (time-0.1,time) ,G.nodes[node]["state"][-1], 
                                    t_eval = np.linspace(time-0.1,time,2), args = (node, paramDf, exposure)).y
             G.nodes[node]["state"] = np.vstack((G.nodes[node]["state"],np.transpose(inf_update)[-1]))
-            G.nodes[node]["TimeInfected"] += [time]
-            G.nodes[node]["Exposure"] += [G.nodes[n]]
             outcome += 1
             break
     # node remains uninfected, add another uninfected row to diff eq array
@@ -164,7 +163,8 @@ def individual(node,
         uninf_update = solve_ivp(user_fct,(time-0.1,time), G.nodes[node]["state"][-1], 
                                  t_eval = np.linspace(time-0.1,time,2), args = (node , paramDf, 0)).y
         G.nodes[node]["state"] = np.vstack((G.nodes[node]["state"],np.transpose(uninf_update)[-1]))
-        # outcome will be 1 automatically if one neighbor transmits virus, else 0
+    # outcome will be 1 automatically if one neighbor transmits virus, else 0
+    G.nodes[node]["Infected"] += [outcome]
     return outcome, probability_list
 
 def tive(time, x, node_id, paramDf, trigger=0):
@@ -270,24 +270,25 @@ def simulate(configuration_file):
     T = int(configs["Duration"]) 
     spd = int(configs["SamplesPerDay"])
     init_expo = float(configs["InitialExposure"])
-    
-    
+    seed = int(configs["Seed"])
+    np.random.seed(seed)
     # Set dicitonary for transmission type, used to determine which function to 
     # use for infection probability
     trans_type = {"Individual":individual, "Neighborhood":neighborhood}
-    # Apply weights to all edges
     # set initial conditions for uninfected nodes
     target = np.array([uninf_init])
     # Create uninfected nodes and data stored in each node
     for u in G.nodes():
-        # create node attributes
+        # create node attributes to collect data
+        # state contains the state array, the solutions to the diff eqs
         G.nodes[u]["state"] = target
-        G.nodes[u]["AgeInfected"] = []
-        G.nodes[u]["AgeUninfected"] = []
+        # List of nodes with an edge connected to node u
         G.nodes[u]["Neighbors"] = [n for n in G.neighbors(u)]
-        G.nodes[u]["TimeInfected"] = []
-        G.nodes[u]["Exposure"] = []
+        # Data for the probability of a node becoming infected at a time step and
+        # The outcome for that probability (1, becomes infected, 0 remains uninfected)
         G.nodes[u]["Probability"] = {"Time":[],"Prob":[], "Outcome":[]}
+        # Indicator for infection, 1 infected, 0 otherwise (at each time step)
+        G.nodes[u]["Infected"] = [0]    
     # initialize infected nodes, either randomized or as passed by the Init_Nodes argument
     if Init_Nodes == None:
         init = random.sample(list(G.nodes()), num_inf_init)
@@ -298,34 +299,19 @@ def simulate(configuration_file):
     for u in init:
         # create infected node attributes
         G.nodes[u]["state"] = infected
-        G.nodes[u]["AgeInfected"] = [1/spd]
-        G.nodes[u]["TimeInfected"] = [0]
-    # running simulation
-    PopulationData = pd.DataFrame(columns = ["time", "target", "infected", "virus", "immunity", "InstInfected", "CumInfected"])
+        G.nodes[u]["Infected"][0] = 1
     for int_time in range(1,spd*T):
         # sample spd times per day
         time = int_time / spd
-        # collect population level data here for each time step
-        # Sums across TIVE compartments for all nodes
-        tot_virus = 0
-        tot_target = 0
-        tot_infcells = 0
-        tot_immunity = 0
-        # Number of currently infectious nodes
-        tot_infected = 0
-        # Cumulative number of nodes who have been infectious at some point
-        cum_infected = 0
         for u in G.nodes:
             # update state of infected nodes first (check if node is infected)
             if (float(G.nodes[u]["state"][int_time - 1,viral_load_ind]) > float(infected[0,viral_load_ind])):
                 # update age of infection and differential equation model
-                G.nodes[u]["AgeInfected"] += [time]
+                G.nodes[u]["Infected"] += [1]
                 update = solve_ivp(user_fct, (time-(1/spd),time), G.nodes[u]["state"][-1], 
                                    t_eval = np.linspace(time-(1/spd),time,2), args=(u, paramDf, 0)).y
                 # add new row of solutions to differential equation array
                 G.nodes[u]["state"] = np.vstack((G.nodes[u]["state"],np.transpose(update)[-1]))
-            else:
-                G.nodes[u]["AgeUninfected"] += [time]
         # check contagion after updating all infected nodes
         for u in G.nodes:
             # This is virus within a node
@@ -338,26 +324,10 @@ def simulate(configuration_file):
             if (node_virus <= min_virus):
                outcome, probability = trans_type[transmission](u, G, viral_load_ind, 
                                                                infected, center, steepness,
-                                                               init_expo, time, user_fct, paramDf)
-            # Update population level data
-            tot_target += float(G.nodes[u]["state"][int_time , 0])
-            tot_infcells += float(G.nodes[u]["state"][int_time , 1])
-            tot_virus += float(G.nodes[u]["state"][int_time ,viral_load_ind])
-            tot_immunity += float(G.nodes[u]["state"][int_time , 3])
-            # count currently infectious nodes
-            if (node_virus > min_virus):
-                tot_infected += 1
-            if (G.nodes[u]["TimeInfected"] != []):
-                cum_infected += 1
+                                                               init_expo, time, user_fct, paramDf, seed)
             G.nodes[u]["Probability"]["Time"] += [time]
             G.nodes[u]["Probability"]["Prob"] += [probability]
             G.nodes[u]["Probability"]["Outcome"] += [outcome]
-        time_df = {"time" : time, "target" : tot_target, "infected" : tot_infcells, 
-                   "virus" : tot_virus, "immunity" : tot_immunity, 
-                   "InstInfected" : tot_infected, "CumInfected" : cum_infected}
-        PopulationData = pd.concat([PopulationData,pd.DataFrame(time_df, index=[0])], ignore_index = True)
-    PopulationData.reset_index()
-    G.graph["data"] = PopulationData
     return G 
 
 
