@@ -1,7 +1,6 @@
-
-NetworkFile=Path_1Weight.edgelist
+NetworkFile=BA10.edgelist
 NumInitialInfected=1
-InitInfectedNodes=[0]
+InitInfectedNodes=[5]
 
 InfectionMethod=Individual
 Center=1700000
@@ -10,9 +9,10 @@ InitialExposure=1e5
 
 Equation=tive
 InfectiveIndex=2
-ParameterData=path_params.csv
+ParameterData=node_10.csv
 TargetInit=[60000,0,0,0]
 InfectedInit=[60000,1,1/6000,0]
 
-Duration=60
-SamplesPerDay=10
+Duration=100
+SamplesPerDay=6
+Seed=333

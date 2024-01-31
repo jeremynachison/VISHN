@@ -1,5 +1,5 @@
 
-NetworkFile=Path_1Weight.edgelist
+NetworkFile=tivDemo.edgelist
 NumInitialInfected=1
 InitInfectedNodes=[0]
 
@@ -8,11 +8,12 @@ Center=1700000
 Steepness=-3/1700000
 InitialExposure=1e5
 
-Equation=tive
+Equation=tiv
 InfectiveIndex=2
-ParameterData=path_params.csv
-TargetInit=[60000,0,0,0]
-InfectedInit=[60000,1,1/6000,0]
+ParameterData=tiv_params.csv
+TargetInit=[60000,0,0]
+InfectedInit=[60000,1,1/6000]
 
 Duration=60
-SamplesPerDay=10
+SamplesPerDay=5
+

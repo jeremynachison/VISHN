@@ -1,18 +1,18 @@
 
-NetworkFile=Path_1Weight.edgelist
+NetworkFile=NTWRKFILE
 NumInitialInfected=1
-InitInfectedNodes=[0]
+InitInfectedNodes=None
 
 InfectionMethod=Individual
 Center=1700000
 Steepness=-3/1700000
-InitialExposure=1e5
+InitialExposure=1e-5
 
 Equation=tive
 InfectiveIndex=2
-ParameterData=path_params.csv
+ParameterData=PARAMFILE
 TargetInit=[60000,0,0,0]
 InfectedInit=[60000,1,1/6000,0]
 
-Duration=60
-SamplesPerDay=10
+Duration=365
+SamplesPerDay=6
