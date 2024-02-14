@@ -53,7 +53,6 @@ def read_config(config_path):
     configs.setdefault("InitInfectedNodes", None)
     # If no seed is given,
     configs.setdefault("Seed", random.randint(0,9999))
-    print(configs)
     return configs
 
 def load_Network(configs):
@@ -464,9 +463,6 @@ def simulate(configuration_file, custom_equation = None, output="graph"):
             )
     elif output=="pandas":
         output = graph2dataframe(G)
-    elif output=="multi-index pandas":
-        #something
-        b=0
     return output
 
 #%%
