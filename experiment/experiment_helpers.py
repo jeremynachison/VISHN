@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
-sys.path.append("../")
-import vishn as vn
+import vishn_old as vn
 # Other packages used
 import numpy as np
 import pandas as pd

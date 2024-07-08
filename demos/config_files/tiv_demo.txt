@@ -1,0 +1,13 @@
+NetworkFile=network_files/equation_guide.edgelist
+InitialHostStates=host_initialconditions/tiv_hostinit.csv
+ParameterData=host_parameters/tiv_params.csv
+
+Center=1700000.0
+Steepness=-1.7647058823529412e-06
+
+InitialExposure=1e-05
+MinimalViralLoad=1e-05
+Equation=tiv
+
+Duration=100
+SamplesPerDay=10

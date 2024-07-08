@@ -2,8 +2,6 @@
 **/.ipynb_checkpoints
 TestCode/
 figures/
-*.edgelist
-*.csv
 *.png
 
 __pycache__/

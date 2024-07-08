@@ -7,13 +7,11 @@
 import sys
 import os
 sys.path.append(os.path.abspath('..'))
-import ExperimentHelpers as exh
+import experiment_helpers as exh
 
 template_experiment = """
-import sys
-sys.path.append('../')
-import vishn as vn
-import ExperimentHelpers as exh
+import vishn_old as vn
+import experiment_helpers as exh
 # Other packages used
 import numpy as np
 import pandas as pd
@@ -79,8 +77,7 @@ for g_type in g_types:
 template_shell = """
 This can generate a shell script for running each file on a computing cluster.
 This template should be made specific to the system used and has been removed
-from this script to not give away any identifying information.
-
+from this script to protect identifying information.
 """
 
 

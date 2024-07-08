@@ -9,10 +9,8 @@
 ##### on a computing cluster.
 
 
-import sys
-sys.path.append('../')
-import vishn as vn
-import ExperimentHelpers as exh
+import vishn_old as vn
+import experiment_helpers as exh
 # Other packages used
 import numpy as np
 import pandas as pd

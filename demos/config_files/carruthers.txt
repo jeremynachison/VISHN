@@ -1,0 +1,14 @@
+NetworkFile=network_files/carruthers_demo.edgelist
+InitialHostStates=host_initialconditions/carruthers_init.csv
+ParameterData=host_parameters/carruthers_params.csv
+
+Center=50000.0
+Steepness=-6e-05
+
+InitialExposure=1e-05
+MinimalViralLoad=1e-05
+Equation=__main__.carruthers
+
+Duration=100
+SamplesPerDay=6
+Seed=0
